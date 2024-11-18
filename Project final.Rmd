@@ -1,0 +1,123 @@
+---
+title: "Project final"
+author: "Ashley"
+date: "2024-11-12"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction:
+
+Online shopping has become more popular, people love to shop online since it is faster and convenient. It is easier to compare prices and research products. You can save yourself time and gas and not have to wait in long lines. All it takes is your phone/computer and your card and you can happily shop online. We are going to look at customer's shopping behaviors from data that I found on Kaggle. We will take a look into specific information like on what people shop for or their prefered season. 
+
+The data I am working with is from Kaggle.
+*https://www.kaggle.com/datasets/iamsouravbanerjee/customer-shopping-trends-dataset*
+The data is made from Sourav Banerjee, who collected the data about a year ago, to explore shopping trends and get a better understand of data analysis.
+
+---
+
+### Loading in the data
+```{r message = F}
+# loading package to clean up data
+library(tidyverse)
+# loading package to use for visual plots
+library(ggplot2)
+library(dplyr)
+
+# loading in the data
+Shopping_Trends_Data <-  read.csv("shopping_trends_updated.csv")
+```
+
+---
+
+### Showing the unfiltered data
+```{r message = F}
+# getting a glimpse 
+glimpse(Shopping_Trends_Data)
+```
+
+---
+
+## Questions that will be answered:
+
+1. What age group has the highest and lowest purchasing behavior?
+
+2. On average, how much do customers spend per season?
+
+3. Which color of clothes do people buy the most per season?
+
+4. Which payment method do customers perfer using?
+
+5. For each season, what is the most item purchased by males/females?
+
+6. What are the top 5 locations where customers tend to buy from?
+
+7. What category do men shop for the most? What about women?
+
+8. 
+
+---
+
+## Key terms that will be used
+- Age
+- Previous Purchases
+- Purchase Amount
+- Season
+- Payment Method
+- Item Purchased
+- Color
+- Location
+- Gender
+- Category
+
+---
+
+## Summaries of Info
+- Total customers: `r length(unique(Shopping_Trends_Data$Customer.ID))`
+- Age range of customers: `r min(Shopping_Trends_Data$Age)` and `r max(Shopping_Trends_Data$Age)`
+- Percentage of Male customers: `r length(unique(Shopping_Trends_Data$Gender == "Male"))` / `r length(unique(Shopping_Trends_Data$Customer.ID))` * 100
+- Percentage of Female customers: 
+
+---
+
+## 1. Age Groups with highest and lowest purchasing behavior
+```{r}
+ggplot(Shopping_Trends_Data, aes(x = Age, y = Previous.Purchases, color = Frequency.of.Purchases)) + geom_boxplot() + scale_x_log10()
+
+```
+
+---
+
+## 2) Average people spent per season
+```{r}
+ggplot(Shopping_Trends_Data %>% 
+  group_by(Season) %>% 
+  summarise(mean(Purchase.Amount..USD.))) + geom_bar(mapping = aes(x = Season, fill = Season))
+
+```
+
+---
+
+## 3) Color most purchased per season
+```{r}
+ggplot()
+
+Shopping_Trends_Data %>% 
+  group_by(Season) %>% 
+  summarise(Num_of_Colors = mode(Color))
+```
+
+---
+
+## 4) Most used Payment Methods
+```{r}
+ggplot(Shopping_Trends_Data) + geom_bar(mapping = aes(x = Season, fill = Payment.Method), position = "dodge")
+
+```
+
+---
+
+## 5) 

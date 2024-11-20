@@ -14,8 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 Online shopping has become more popular, people love to shop online since it is faster and convenient. It is easier to compare prices and research products. You can save yourself time and gas and not have to wait in long lines. All it takes is your phone/computer and your card and you can happily shop online. We are going to look at customer's shopping behaviors from data that I found on Kaggle. We will take a look into specific information like on what people shop for or their prefered season. 
 
 The data I am working with is from Kaggle.
-*https://www.kaggle.com/datasets/iamsouravbanerjee/customer-shopping-trends-dataset*
-The data is made from Sourav Banerjee, who made the data about a year ago, to explore shopping trends and get a better understand of data analysis.
+*https://www.kaggle.com/datasets/shreyanshverma27/online-sales-dataset-popular-marketplace-data?resource=download*
+The data is made by Shreyanshverma27, who collected the data about 6 months ago, to explore shopping trends in the marketplace and get a better understand of data analysis.
 
 ---
 
@@ -28,8 +28,6 @@ library(ggplot2)
 library(dplyr)
 
 # loading in the data
-Shopping_Trends_Data <-  read.csv("shopping_trends_updated.csv")
-
 Online_Sales_Data <- read.csv("Online Sales Data.csv", stringsAsFactors = T)
 
 ```
@@ -39,7 +37,6 @@ Online_Sales_Data <- read.csv("Online Sales Data.csv", stringsAsFactors = T)
 ### Showing the unfiltered data
 ```{r message = F}
 # getting a glimpse 
-glimpse(Shopping_Trends_Data)
 glimpse(Online_Sales_Data)
 ```
 
@@ -66,21 +63,19 @@ glimpse(Online_Sales_Data)
 ---
 
 ## Key terms that will be used
-- Age
-- Previous Purchases
-- Purchase Amount
-- Season
-- Payment Method
-- Item Purchased
-- Color
-- Location
-- Gender
+- Order ID
+- Date
 - Category
+- Product Name
+- Quantity
+- Unit Price
+- Region
+- Payment Method
 
 ---
 
 ## Summaries of Info
-- Total customers: `r nrow(Online_Sales_Data)`
+- Total Customers: `r nrow(Online_Sales_Data)`
 
 - Product Categories: `r levels(Online_Sales_Data$Product.Category)`
 
@@ -88,9 +83,6 @@ glimpse(Online_Sales_Data)
 
 - Start and End Date: `r Online_Sales_Data %>%  summarize("Start Date"= min(as.character(Date)), "End Date"= max(as.character(Date)))`
 
-- Age range of customers: `r min(Shopping_Trends_Data$Age)` and `r max(Shopping_Trends_Data$Age)`
-- Percentage of Male customers: `r paste0(sum((Shopping_Trends_Data$Gender == "Male")) / length(unique(Shopping_Trends_Data$Customer.ID)) * 100, "%")`
-- Percentage of Female customers: `r paste0(sum((Shopping_Trends_Data$Gender == "Female")) / length(unique(Shopping_Trends_Data$Customer.ID)) * 100, "%")`
 
 ---
 

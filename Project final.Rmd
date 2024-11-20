@@ -15,7 +15,7 @@ Online shopping has become more popular, people love to shop online since it is 
 
 The data I am working with is from Kaggle.
 *https://www.kaggle.com/datasets/iamsouravbanerjee/customer-shopping-trends-dataset*
-The data is made from Sourav Banerjee, who collected the data about a year ago, to explore shopping trends and get a better understand of data analysis.
+The data is made from Sourav Banerjee, who made the data about a year ago, to explore shopping trends and get a better understand of data analysis.
 
 ---
 
@@ -29,6 +29,9 @@ library(dplyr)
 
 # loading in the data
 Shopping_Trends_Data <-  read.csv("shopping_trends_updated.csv")
+
+Online_Sales_Data <- read.csv("Online Sales Data.csv", stringsAsFactors = T)
+
 ```
 
 ---
@@ -37,6 +40,7 @@ Shopping_Trends_Data <-  read.csv("shopping_trends_updated.csv")
 ```{r message = F}
 # getting a glimpse 
 glimpse(Shopping_Trends_Data)
+glimpse(Online_Sales_Data)
 ```
 
 ---
@@ -76,16 +80,25 @@ glimpse(Shopping_Trends_Data)
 ---
 
 ## Summaries of Info
-- Total customers: `r length(unique(Shopping_Trends_Data$Customer.ID))`
+- Total customers: `r nrow(Online_Sales_Data)`
+
+- Product Categories: `r levels(Online_Sales_Data$Product.Category)`
+
+- Region of sales: `r levels(Online_Sales_Data$Region)`
+
+- Start and End Date: `r Online_Sales_Data %>%  summarize("Start Date"= min(as.character(Date)), "End Date"= max(as.character(Date)))`
+
 - Age range of customers: `r min(Shopping_Trends_Data$Age)` and `r max(Shopping_Trends_Data$Age)`
-- Percentage of Male customers: `r length(unique(Shopping_Trends_Data$Gender == "Male"))` / `r length(unique(Shopping_Trends_Data$Customer.ID))` * 100
-- Percentage of Female customers: 
+- Percentage of Male customers: `r paste0(sum((Shopping_Trends_Data$Gender == "Male")) / length(unique(Shopping_Trends_Data$Customer.ID)) * 100, "%")`
+- Percentage of Female customers: `r paste0(sum((Shopping_Trends_Data$Gender == "Female")) / length(unique(Shopping_Trends_Data$Customer.ID)) * 100, "%")`
 
 ---
 
 ## 1. Age Groups with highest and lowest purchasing behavior
 ```{r}
-ggplot(Shopping_Trends_Data, aes(x = Age, y = Previous.Purchases, color = Frequency.of.Purchases)) + geom_boxplot() + scale_x_log10()
+
+
+ggplot(Shopping_Trends_Data, aes(x = Age, y = Previous.Purchases)) + geom_density2d()
 
 ```
 
@@ -93,22 +106,34 @@ ggplot(Shopping_Trends_Data, aes(x = Age, y = Previous.Purchases, color = Freque
 
 ## 2) Average people spent per season
 ```{r}
-ggplot(Shopping_Trends_Data %>% 
-  group_by(Season) %>% 
-  summarise(mean(Purchase.Amount..USD.))) + geom_bar(mapping = aes(x = Season, fill = Season))
+ggplot(Shopping_Trends_Data %>%
+  group_by(Season) %>%
+  summarise(mean_by_season = mean(Purchase.Amount..USD.))) + geom_col(mapping = aes(x = Season, y = mean_by_season, fill = Season))
 
 # notate value on the side
 ```
 
 ---
 
-## 3) Top Colors most purchased per season
-```{r}
-ggplot()
+## 3) Colors most purchased per season
 
-Shopping_Trends_Data %>% 
-  group_by(Season) %>% 
-  arrange(-desc(Color))
+ggplot(Shopping_Trends_Data %>%
+  group_by(Season) %>%
+  summarise(Num_of_Colors = first(names(sort(table(Color), decreasing = TRUE)))))
+
+
+Top_3_Colors <- Shopping_Trends_Data %>%
+  group_by(Season) %>%
+  summarise(Num_of_Colors = names(sort(table(Color), decreasing = TRUE))) %>% 
+  slice_head(n = 3)
+
+Top_3_Colors
+
+
+ggplot(Shopping_Trends_Data$Top_3_Colors, aes(x = Customer.ID, y = Color, color = Season)) + geom_point() + facet_wrap(~ Season)
+
+
+
 ```
 
 ---
@@ -130,12 +155,20 @@ ggplot(Shopping_Trends_Data) + geom_bar(mapping = aes(x = Payment.Method, fill =
 ---
 
 ## 6) Top locations that customers are purchasing from
-```{r}
-Shopping_Trends_Data %>% 
-  arrange(mode(Location)) %>% 
-  filter(Location == )
 
-```
+Top_Locations <- Shopping_Trends_Data %>% 
+  arrange(Location) %>% 
+  summarise(Top_Locations = names(sort(table(Location), decreasing = TRUE))) %>% 
+  slice_head(n = 5)
+Top_Locations
+
+
+
+ggplot(Shopping_Trends_Data, aes(x = Customer.ID, y = count(Top_Locations), shape = Location)) + geom_point() 
+
+
+
+
 
 ---
 
@@ -149,6 +182,6 @@ Shopping_Trends_Data %>%
 
 ## 8) Sales behavior summary
 ```{r}
-ggplot(data = Shopping_Trends_Data, aes(x = Customer.ID, y = Category, color = Season)) + geom_point() + facet_wrap(~ Season) + scale_x_log10()
+ggplot(data = Shopping_Trends_Data, aes(x = Customer.ID, y = Category, color = Season)) + geom_point() + facet_wrap(~ Season) 
 
 ```

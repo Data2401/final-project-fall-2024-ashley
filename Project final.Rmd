@@ -1,5 +1,5 @@
 ---
-title: "Customer Shopping Trends"
+title: "Online Shopping Sales"
 author: "Ashley"
 date: "2024-11-12"
 output: slidy_presentation
@@ -9,9 +9,11 @@ output: slidy_presentation
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+---
+
 ## Introduction:
 
-Online shopping has become more popular, people love to shop online since it is faster and convenient. It is easier to compare prices and research products. You can save yourself time and gas and not have to wait in long lines. All it takes is your phone/computer and your card and you can happily shop online. We are going to look at customer's shopping behaviors from data that I found on Kaggle. We will take a look into specific information like on what people shop for or their prefered season. 
+Online shopping has become more popular, people love to shop online since it is faster and convenient. It is easier to compare prices and research products. You can save yourself time and gas and not have to wait in long lines. All it takes is your phone/computer and your card and you can happily shop online. We are going to look at customer's shopping behaviors from data that I found on Kaggle. We will take a look into specific information like on what categories people shop for and how much people spend.
 
 The data I am working with is from Kaggle.
 *https://www.kaggle.com/datasets/shreyanshverma27/online-sales-dataset-popular-marketplace-data?resource=download*
@@ -23,13 +25,15 @@ The data is made by Shreyanshverma27, who collected the data about 6 months ago,
 ```{r message = F}
 # loading package to clean up data
 library(tidyverse)
-# loading package to use for visual plots
+# loading package to use for visual plots and working with data
 library(ggplot2)
 library(dplyr)
 
 # loading in the data
 Online_Sales_Data <- read.csv("Online Sales Data.csv", stringsAsFactors = T)
 
+#re-arranging the dates
+Online_Sales_Data <- Online_Sales_Data %>% mutate(shop_date = ymd(Date))
 ```
 
 ---
@@ -44,31 +48,32 @@ glimpse(Online_Sales_Data)
 
 ## Questions that will be answered:
 
-1. What age group has the highest and lowest purchasing behavior?
+1. Which month has the highest and lowest purchasing behavior?
 
-2. On average, how much do customers spend per season?
+2. Which category is shopped for the most based off the regions?
 
-3. Which color of clothes do people buy the most per season?
+3. How does the total revenue vary by regions?
 
-4. Which payment method do customers perfer using?
+4. How does the categories differ in behavior by month?
 
-5. For each season, what is the most item purchased by males/females?
+5. How does payment method vary by region?
 
-6. What are the top 5 locations where customers tend to buy from?
+6. How does price affect the product categories?
 
-7. What category do men shop for the most? What about women?
+7. How much do people spend on average for each category?
 
-8. When are sales the greatest and when are they the lowest?
+8. How much are people spending throughout this data?
 
 ---
 
 ## Key terms that will be used
-- Order ID
+- Transaction ID
 - Date
 - Category
 - Product Name
 - Quantity
 - Unit Price
+- Units Sold
 - Region
 - Payment Method
 
@@ -81,48 +86,21 @@ glimpse(Online_Sales_Data)
 
 - Region of sales: `r levels(Online_Sales_Data$Region)`
 
-- Start and End Date: `r Online_Sales_Data %>%  summarize("Start Date"= min(as.character(Date)), "End Date"= max(as.character(Date)))`
-
+- Start and End Date: `r Online_Sales_Data %>%  summarize("Start Date"= min(as.character(Date)), "EndDate"= max(as.character(Date)))`
 
 ---
 
-## 1. Age Groups with highest and lowest purchasing behavior
+## 1) How does month affect purchasing behavior?
 ```{r}
-
-
-ggplot(Shopping_Trends_Data, aes(x = Age, y = Previous.Purchases)) + geom_density2d()
+ggplot(data = Online_Sales_Data, aes(x = shop_date)) + geom_freqpoly(binwidth = 22) + ggtitle("Sales Behavior", subtitle = "By month") + labs(x = "Month", y = "Count")
 
 ```
 
 ---
 
-## 2) Average people spent per season
+## 2) Which category is shopped for the most based off the regions?
 ```{r}
-ggplot(Shopping_Trends_Data %>%
-  group_by(Season) %>%
-  summarise(mean_by_season = mean(Purchase.Amount..USD.))) + geom_col(mapping = aes(x = Season, y = mean_by_season, fill = Season))
-
-# notate value on the side
-```
-
----
-
-## 3) Colors most purchased per season
-
-ggplot(Shopping_Trends_Data %>%
-  group_by(Season) %>%
-  summarise(Num_of_Colors = first(names(sort(table(Color), decreasing = TRUE)))))
-
-
-Top_3_Colors <- Shopping_Trends_Data %>%
-  group_by(Season) %>%
-  summarise(Num_of_Colors = names(sort(table(Color), decreasing = TRUE))) %>% 
-  slice_head(n = 3)
-
-Top_3_Colors
-
-
-ggplot(Shopping_Trends_Data$Top_3_Colors, aes(x = Customer.ID, y = Color, color = Season)) + geom_point() + facet_wrap(~ Season)
+ggplot(data = Online_Sales_Data) + geom_bar(mapping = aes(x = Region, fill = Product.Category), position = "dodge") + ggtitle("Categories Shopped for the Most", subtitle = "By Region")
 
 
 
@@ -130,50 +108,85 @@ ggplot(Shopping_Trends_Data$Top_3_Colors, aes(x = Customer.ID, y = Color, color 
 
 ---
 
-## 4) Most used Payment Methods
+## 3) How does the total revenue vary by regions?
 ```{r}
-ggplot(Shopping_Trends_Data) + geom_bar(mapping = aes(x = Payment.Method, fill = Payment.Method))
+Online_Sales_Data %>%
+  group_by(Region) %>%
+  summarise(Total_of_Revenue = sum(Total.Revenue)) %>%
+  ggplot(aes(x = Region, y = Total_of_Revenue, fill = Region)) +
+  geom_col() + geom_text(
+    aes(label = Total_of_Revenue, y = Total_of_Revenue + 0.05),
+    position = position_dodge(0.8),
+    vjust = 0) +
+  labs(x = "Region", y = "Total Revenue")
 
 ```
 
 ---
-
-## 5) Items most purchased by gender per season
+## 4) How does the categories differ in behavior by month?
 ```{r}
+Online_Sales_Data %>% 
+  group_by(shop_date, Product.Category) %>% 
+  select(Product.Category, Product.Name, Units.Sold) %>% 
+  ggplot(aes(x = shop_date, y = Units.Sold)) + geom_point() + facet_wrap(~Product.Category) + 
+  ggtitle("Trends by Category", subtitle = "Monthly") +
+  labs(x = "Month", y = "Num of Product Sold")
 
 
 ```
 
 ---
-
-## 6) Top locations that customers are purchasing from
-
-Top_Locations <- Shopping_Trends_Data %>% 
-  arrange(Location) %>% 
-  summarise(Top_Locations = names(sort(table(Location), decreasing = TRUE))) %>% 
-  slice_head(n = 5)
-Top_Locations
-
-
-
-ggplot(Shopping_Trends_Data, aes(x = Customer.ID, y = count(Top_Locations), shape = Location)) + geom_point() 
-
-
-
-
-
----
-
-## 7) Categories shopped for the most by gender
+## 5) How does payment method vary by region?
 ```{r}
+ggplot(Online_Sales_Data) + geom_bar(mapping = aes(x = Region, fill = Payment.Method)) + ggtitle("Payment Methods", subtitle = "By Region")
+
 
 
 ```
 
 ---
 
-## 8) Sales behavior summary
+## 6) How does price affect the product categories?
 ```{r}
-ggplot(data = Shopping_Trends_Data, aes(x = Customer.ID, y = Category, color = Season)) + geom_point() + facet_wrap(~ Season) 
+ggplot(data = Online_Sales_Data, aes(x = Unit.Price, y = Units.Sold, color = Product.Category)) + geom_point() + ggtitle("Price and Units sold Behavior", subtitle = "By Product Category") + labs(x = "Price of Product", y = "Num of Product Sold")
+```
+
+---
+
+## 7) How much do people spend on average for each category?
+```{r}
+Online_Sales_Data %>%
+  group_by(Product.Category) %>%
+  summarise(average_spent = mean(Unit.Price)) %>%
+  ggplot(aes(x = factor(Product.Category), y = average_spent, fill = Product.Category)) +
+  geom_col() + geom_text(
+    aes(label = average_spent, y = average_spent + 0.05),
+    position = position_dodge(0.8),
+    vjust = 0) +
+  labs(x = "Product Category", y = "Average Spent")
+  
 
 ```
+
+---
+# What are the electronics that people spend the most on?
+```{r}
+Online_Sales_Data %>% 
+  filter(Product.Category == "Electronics") %>% 
+  group_by(Product.Name, Unit.Price) %>% 
+  summarise(Name_MaxElectronics = head(sort(Unit.Price, decreasing = TRUE), 5)) %>% 
+  arrange(desc(Unit.Price)) %>% 
+  head(5)
+
+```
+
+--- 
+## 8) How much are people spending throughout the time?
+```{r}
+ggplot(data = Online_Sales_Data, aes(x = shop_date, y = Unit.Price, color = shop_date)) + geom_point() + ggtitle("Spending Behavior", subtitle = "By Month") + labs(x = "Month", y = "Price of Product")
+
+```
+---
+
+## Summary) 
+To summarize, the data showed that North America spends a lot on electronics especially Apple Products.

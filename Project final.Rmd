@@ -140,8 +140,6 @@ Online_Sales_Data %>%
 ```{r}
 ggplot(Online_Sales_Data) + geom_bar(mapping = aes(x = Region, fill = Payment.Method)) + ggtitle("Payment Methods", subtitle = "By Region")
 
-
-
 ```
 
 ---
@@ -174,7 +172,7 @@ Online_Sales_Data %>%
 Online_Sales_Data %>% 
   filter(Product.Category == "Electronics") %>% 
   group_by(Product.Name, Unit.Price) %>% 
-  summarise(Name_MaxElectronics = head(sort(Unit.Price, decreasing = TRUE), 5)) %>% 
+  summarise(Name_MaxElectronics = head(sort(Unit.Price, decreasing = TRUE), 5)) %>%
   arrange(desc(Unit.Price)) %>% 
   head(5)
 

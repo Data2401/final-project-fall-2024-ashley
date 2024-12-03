@@ -1,0 +1,224 @@
+---
+title: "Online Shopping Sales"
+author: "Ashley Patino"
+date: "2024-11-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+
+## Introduction:
+
+Online shopping has become more popular, people love to shop online since it is faster and convenient. It is easier to compare prices and research products. You can save yourself time and gas and not have to wait in long lines. All it takes is your phone/computer and your card and you can happily shop online. 
+
+We are going to look at customer's shopping behaviors from data that I found on Kaggle. We will take a look into specific information like on what categories people shop for and how much people are spending. Bar graphs, scatter plots, and tables will be used. By using these methods, aside from exploring customer shopping behavior and seeing their trends, we will ultimately see which region has the most spending and what category they are spending the most on.
+
+The data I am working with is from Kaggle. *https://www.kaggle.com/datasets/shreyanshverma27/online-sales-dataset-popular-marketplace-data?resource=download* This data is made by Shreyanshverma27, who collected it about 6 months ago, to explore shopping trends in the marketplace and get a better understand of data analysis.
+
+---
+
+### Loading in the data
+```{r message = F}
+# loading package to clean up data
+library(tidyverse)
+# loading package to use for visual plots and working with data
+library(ggplot2)
+library(dplyr)
+
+# loading in the data
+Online_Sales_Data <- read.csv("Online Sales Data.csv", stringsAsFactors = T)
+
+#re-arranging the dates
+Online_Sales_Data <- Online_Sales_Data %>% mutate(shop_date = ymd(Date))
+```
+
+---
+
+### Showing the unfiltered data
+```{r message = F}
+# getting a glimpse 
+glimpse(Online_Sales_Data)
+```
+
+---
+
+## Questions that will be answered:
+
+1. Which month has the highest and lowest purchasing behavior?
+
+2. Which category is shopped for the most based off the regions?
+
+3. How does the categories differ in behavior by month?
+
+4. How does price affect the product categories?
+
+5. How much do people spend for each category?
+
+6. How much are people spending on average throughout this data?
+
+7. Top products in each category
+
+---
+
+## Key terms that will be used
+
+Out of the 9 columns of this data, we will be using 7 of them:
+
+- Date
+
+- Category
+
+- Product Name
+
+- Quantity
+
+- Unit Price
+
+- Units Sold
+
+- Region
+
+---
+
+## Summaries of Info
+- Total Customers: `r nrow(Online_Sales_Data)`
+
+- Product Categories: `r levels(Online_Sales_Data$Product.Category)`
+
+- Region of sales: `r levels(Online_Sales_Data$Region)`
+
+- Start and End Date: `r Online_Sales_Data %>% summarize("Start Date"= min(as.character(Date)), "EndDate"= max(as.character(Date)))`
+
+---
+
+## 1) How does month affect purchasing behavior?
+```{r}
+ggplot(data = Online_Sales_Data, aes(x = shop_date)) + geom_freqpoly(binwidth = 22) + ggtitle("Sales Behavior", subtitle = "By month") + labs(x = "Month", y = "Count")
+```
+
+The peak here is shown at or around February which was the best selling month, a possible theory as to why sales are high is because of Mother's Day. It shows a steady count from about February to August. After August is when sales start to decline. So, from February to August was when sales were excellent.
+
+---
+
+## 2) Which category is shopped for the most based off the regions?
+```{r}
+ggplot(data = Online_Sales_Data) + 
+  geom_bar(mapping = aes(x = Region, fill = Product.Category), position = "dodge") + 
+  scale_fill_manual(values= c("#88BDE6","#B2ABD2","#90CD97", "#F1B6DA", "#FDB863", "#EDDD46")) + 
+  ggtitle("Categories Shopped for the Most", subtitle = "By Region")
+```
+
+Looks like the data only collected specific categories for each region and the same number of transactions. Between each region, we will see how their spending looked like and we will compare them.
+
+---
+
+## 3) How does the categories differ in behavior by month?
+```{r}
+Online_Sales_Data %>% 
+  group_by(shop_date, Product.Category) %>% 
+  select(Product.Category, Product.Name, Units.Sold) %>% 
+  ggplot(aes(x = shop_date, y = Units.Sold)) + geom_point() + facet_wrap(~Product.Category) + 
+  ggtitle("Trends by Category", subtitle = "Monthly") +
+  labs(x = "Month", y = "Num of Product Sold") + 
+  scale_fill_manual(values = c("#88BDE6","#B2ABD2","#90CD97", "#F1B6DA", "#FDB863", "#EDDD46"))
+```
+
+From this graph, you can see clothes were the category that people were purchasing more of. Beauty products were the least purchased by unit out of all categories. This graph surprised me with beauty products being the lowest quantity purchased since people do tend to buy more of them. 
+
+---
+
+## 4) How does price affect the product categories?
+
+```{r}
+ggplot(data = Online_Sales_Data, aes(x = Unit.Price, y = Units.Sold, color = Product.Category)) + 
+  geom_point() + 
+  ggtitle("Price and Units sold Behavior", subtitle = "By Product Category") + 
+  labs(x = "Price of Product", y = "Num of Product Sold") + 
+  scale_fill_manual("Product.Category", values = c("#88BDE6","#B2ABD2","#90CD97", "#F1B6DA", "#FDB863", "#EDDD46"))
+```
+
+You can see here that electronics were purchased the least by quantity which would make sense since electronics are pricey. Clothing was the most purchased quantity being cheaper. Products that were over $2,000 only sold once. This graph concludes that the lower the price, the more its bought of in terms of quantity. The higher the price, the less its bought.
+
+---
+
+## 5) How much did people spend for each category?
+
+```{r}
+Online_Sales_Data %>%
+  group_by(Product.Category) %>%
+  summarise(total_spent = sum(Unit.Price)) %>%
+  ggplot(aes(x = factor(Product.Category), y = total_spent, fill = Product.Category)) +
+  geom_col() + geom_text(
+    aes(label = round(total_spent)),
+    position = position_dodge(0.8),
+    vjust = 0) +
+  labs(x = "Product Category", y = "Total Spent") +
+  scale_fill_manual(values = c("#88BDE6","#B2ABD2","#90CD97", "#F1B6DA", "#FDB863", "#EDDD46")) +
+  ggtitle("Total Spent", subtitle = "By Product Category")
+```
+
+This graph shows people spent the most money on electronics and the least money on books, I took off the cents and rounded it up to make the graph a bit easier to read. Home appliances, which is in the North America region, ranked in #2. Looking at this graph, Yyou can make a theory to which region spends the most money on.
+
+---
+
+## 6) How much are people spending on average throughout this data?
+
+```{r}
+Online_Sales_Data %>%
+  group_by(Product.Category) %>%
+  summarise(average_spent = mean(Unit.Price)) %>%
+  ggplot(aes(x = factor(Product.Category), y = average_spent, fill = Product.Category)) +
+  geom_col() + geom_text(
+    aes(label = round(average_spent), y = average_spent + 0.05),
+    position = position_dodge(0.8),
+    vjust = 0) +
+  labs(x = "Product Category", y = "Average Spent") +
+  scale_fill_manual(values = c("#88BDE6","#B2ABD2","#90CD97", "#F1B6DA", "#FDB863", "#EDDD46")) +
+  ggtitle("Average Spent", subtitle = "By Product Category")
+```
+
+This graph shows the average spent from each category with the data rounded up. What surprised me the most about this graph was the average spent on clothes. I would assume it would be a bit higher since people love to spend money on clothes.
+
+---
+
+## 7) Top Products
+
+#### Lets look at the the top 10 expensive electronics people bought:
+
+Top Most Pricy Electronics bought:
+```{r}
+Top_Electronics_NamePrice <- Online_Sales_Data %>% 
+  filter(Product.Category == "Electronics") %>% 
+  group_by(Product.Name, Unit.Price) %>% 
+  arrange(desc(Unit.Price)) %>% 
+  select(Product.Name, Unit.Price) %>% 
+  head(10)
+Top_Electronics_NamePrice
+```
+
+As you can see, Apple Products are very popular in North America. 4 of 10 items are Apple Products, each being over $1,000. 
+
+
+
+#### These are the top expensive products overall:
+
+Top Most Pricy Products Bought:
+```{r}
+Top_Products_NamePrice <- Online_Sales_Data %>% 
+  group_by(Product.Name, Unit.Price) %>% 
+  arrange(desc(Unit.Price)) %>% 
+  select(Product.Category, Product.Name, Unit.Price) %>% 
+  head(10)
+Top_Products_NamePrice
+```
+
+--- 
+
+## Summary) 
+To summarize, the data showed that North America spends the most money, specifically on electronics. The prices of the electronics go up to `r Online_Sales_Data %>% filter(Product.Category == "Electronics") %>% summarize(max(Unit.Price))` and as low as `r Online_Sales_Data %>% filter(Product.Category == "Electronics") %>% summarize(min(Unit.Price))` with the average spending of `r Online_Sales_Data %>% filter(Product.Category == "Electronics") %>% summarize(round(mean(Unit.Price)))`. Home appliances was the second top category that was spent the most on. The world is getting tech-savy more each day, people will be spending even more in the future than what they spent through out this data. 
+
+In my opinion, this data was very limited since there was only 2 different categories for each region and not a lot of number of transactions. It would have been better if all 3 regions had all of the categories. Either way, if that were the case, my theory would be that people still spend the most on electronics. Also, the data stops at August so there is a good chunk of the year missing that can affect the data.
